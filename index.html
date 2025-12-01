@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>输入与按钮</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;margin:0;padding:40px;display:flex;justify-content:center;align-items:flex-start;background:#f6f7f9}
+.container{max-width:480px;width:100%}
+label{display:block;margin-bottom:8px;font-weight:600}
+input{width:100%;padding:10px 12px;border:1px solid #d0d7de;border-radius:8px;font-size:16px;outline:none}
+button{margin-top:12px;width:100%;padding:10px 12px;border:none;border-radius:8px;background:#0a84ff;color:#fff;font-size:16px;cursor:pointer}
+button[disabled]{background:#c7cdd4;color:#f8f9fa;cursor:not-allowed}
+button:active{transform:scale(0.99)}
+.doc{margin-top:16px;font-size:14px;color:#555}
+.preview{margin-top:16px}
+.preview iframe{width:100%;height:420px;border:1px solid #d0d7de;border-radius:8px;background:#fff}
+.preview .loading{padding:10px 12px;border:1px dashed #d0d7de;border-radius:8px;color:#555;background:#fafbfc}
+</style>
+</head>
+<body>
+<div class="container">
+<label for="textInput">请输入手机 IP 地址</label>
+<input id="textInput" type="text" placeholder="例如 192.168.1.2">
+<button id="submitBtn" disabled>点击</button>
+<div class="doc">使用文档：
+<a href="https://bytedance.larkoffice.com/wiki/KbPOw6f0BiZWo2kxw38cdbLDnmb" target="_blank" rel="noopener">使用文档</a>
+</div>
+<div id="preview" class="preview" style="display:none">
+  <div id="loading" class="loading" style="display:none">正在加载...</div>
+  <iframe id="remoteFrame" title="远程页面" style="display:none"></iframe>
+  <div id="error" style="display:none;color:#c00;margin-top:8px">加载失败，请检查 IP 或端口是否可访问</div>
+  <div style="font-size:12px;color:#888;margin-top:8px">若页面无法显示，可能为跨站点嵌入限制或网络不可达</div>
+</div>
+</div>
+<script>
+const input=document.getElementById('textInput');
+const btn=document.getElementById('submitBtn');
+const preview=document.getElementById('preview');
+const frame=document.getElementById('remoteFrame');
+const loading=document.getElementById('loading');
+const error=document.getElementById('error');
+function isIPv4(v){
+  const parts=v.trim().split('.');
+  if(parts.length!==4) return false;
+  for(let i=0;i<4;i++){
+    if(parts[i].length===0||/[^0-9]/.test(parts[i])) return false;
+    const n=Number(parts[i]);
+    if(n<0||n>255) return false;
+    if(parts[i].length>1&&parts[i][0]==='0') return false;
+  }
+  return true;
+}
+function update(){
+  const v=input.value;
+  btn.disabled=!isIPv4(v);
+}
+input.addEventListener('input',update);
+btn.addEventListener('click',function(){
+  const ip=input.value.trim();
+  const url='http://'+ip+':9000/index.html';
+  preview.style.display='block';
+  error.style.display='none';
+  loading.style.display='block';
+  frame.style.display='none';
+  frame.src=url;
+  let done=false;
+  frame.onload=function(){
+    done=true;
+    loading.style.display='none';
+    frame.style.display='block';
+  };
+  setTimeout(function(){
+    if(!done){
+      loading.style.display='none';
+      error.style.display='block';
+    }
+  },8000);
+});
+update();
+</script>
+</body>
+</html>
