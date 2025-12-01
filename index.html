@@ -73,31 +73,39 @@ input.addEventListener('blur',update);
 btn.addEventListener('click',function(){
   const ip=input.value.trim();
   if(!isIPv4(ip)){update();return;}
-  const protocol=location.protocol==='https:'?'https://':'http://';
+  console.log('[host-parse] 输入', ip);
+  const parts=ip.split('.');
+  console.log('[host-parse] 拆分', parts);
+  for(let i=0;i<parts.length;i++){
+    const n=Number(parts[i]);
+    console.log('[host-parse] 段', i, {raw:parts[i], num:n, numeric:/[^0-9]/.test(parts[i]), leadingZero:parts[i].length>1&&parts[i][0]==='0', rangeOk:n>=0&&n<=255});
+  }
+  const protocol='http://';
   const url=protocol+ip+':9000/index.html?host='+encodeURIComponent(ip);
+  console.log('[request] 构造 URL', url);
   preview.style.display='block';
   error.style.display='none';
   loading.style.display='block';
   frame.style.display='none';
   frame.src=url;
   let done=false;
-  frame.onload=function(){
-    done=true;
-    loading.style.display='none';
-    frame.style.display='block';
-  };
-  setTimeout(function(){
+  const timerId=setTimeout(function(){
     if(!done){
       loading.style.display='none';
       error.style.display='block';
+      console.warn('[iframe] 加载超时或被拦截', frame.src);
     }
   },8000);
+  frame.onload=function(){
+    done=true;
+    clearTimeout(timerId);
+    error.style.display='none';
+    loading.style.display='none';
+    frame.style.display='block';
+    console.log('[iframe] 加载成功', frame.src);
+  };
   const hint=document.getElementById('hint');
-  if(location.protocol==='https:'){
-    hint.textContent='当前页面为 HTTPS，如远端未开启 HTTPS 将被浏览器拦截（混合内容）。请确保 '+ip+':9000 支持 HTTPS 或改用代理。';
-  }else{
-    hint.textContent='若页面无法显示，可能为跨站点嵌入限制或网络不可达。';
-  }
+  hint.textContent='当前使用 HTTP 请求到 '+ip+':9000；在 HTTPS 页面中可能被浏览器拦截为混合内容。';
 });
 update();
 </script>
